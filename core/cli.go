@@ -9,7 +9,7 @@ import (
 )
 
 type CLI struct {
-	bc *Blockchain
+	BC *Blockchain
 }
 
 func (cli *CLI) printUsage() {
@@ -26,16 +26,16 @@ func (cli *CLI) validateArgs() {
 }
 
 func (cli *CLI) addBlock(data string) {
-	cli.bc.AddBlock(data)
+	cli.BC.AddBlock(data)
 	fmt.Println("Sucess add block !")
 }
 
 func (cli *CLI) printChain() {
-	bci := cli.bc.Iterator()
+	bci := cli.BC.Iterator()
 	for {
 		block := bci.Next()
 
-		fmt.Printf("Prev. hash: %x\n", block.PrevBlockHash)
+		fmt.Printf("Previous hash: %x\n", block.PrevBlockHash)
 		fmt.Printf("Data: %s\n", block.Data)
 		fmt.Printf("Hash: %x\n", block.Hash)
 		pow := NewPow(block)
