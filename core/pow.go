@@ -17,6 +17,7 @@ type Pow struct {
 
 func NewPow(b *Block) *Pow {
 	target := big.NewInt(1)
+	// Local Sensitive hashing
 	target.Lsh(target, uint(256-targetBits))
 	pow := &Pow{b, target}
 
