@@ -11,6 +11,13 @@ type BlockchainIterator struct {
 	db          *bolt.DB
 }
 
+// Iterator
+func (bc *Blockchain) Iterator() *BlockchainIterator {
+	bci := &BlockchainIterator{bc.tip, bc.Db}
+
+	return bci
+}
+
 // Next return next block starting from the tip
 func (i *BlockchainIterator) Next() *Block {
 	var block *Block

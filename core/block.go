@@ -2,6 +2,7 @@ package core
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/gob"
 	"log"
 	"time"
@@ -9,15 +10,15 @@ import (
 
 type Block struct {
 	Timestamp     int64
-	Data          []byte
+	Transactions  []*Transaction
 	PrevBlockHash []byte
 	Hash          []byte
 	Nonce         int
 }
 
-func NewBlock(data string, PrevBlockHash []byte) *Block {
+func NewBlock(transactions []*Transaction, PrevBlockHash []byte) *Block {
 	// assign reference
-	block := &Block{time.Now().Unix(), []byte(data), PrevBlockHash, []byte{}, 0}
+	block := &Block{time.Now().Unix(), transactions, PrevBlockHash, []byte{}, 0}
 	pow := NewPow(block)
 	nonce, hash := pow.Compute()
 	block.Hash = hash[:]
@@ -26,8 +27,8 @@ func NewBlock(data string, PrevBlockHash []byte) *Block {
 	return block
 }
 
-func GenesisBlock() *Block {
-	return NewBlock("Genesis Block", []byte{})
+func GenesisBlock(coinbase *Transaction) *Block {
+	return NewBlock([]*Transaction{coinbase}, []byte{})
 }
 
 func (b *Block) Serializer() []byte {
@@ -49,4 +50,18 @@ func Deserializer(d []byte) *Block {
 	}
 
 	return &block
+}
+
+// Get hashes of each transaction, concat them
+// and get a hash of the concatenated combination
+func (b *Block) HashTransaction() []byte {
+	var txHashes [][]byte
+	var txHash [32]byte
+
+	for _, tx := range b.Transactions {
+		txHashes = append(txHashes, tx.ID)
+	}
+	txHash = sha256.Sum256(bytes.Join(txHashes, []byte{}))
+
+	return txHash[:]
 }
