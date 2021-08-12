@@ -5,7 +5,7 @@ import (
 	"math/big"
 )
 
-var b58Alphabet = []byte("123456789ABCDEFGHJKLMNPQRSTUVMXYZabcdefghjklmnpqrstuvwxyz")
+var b58Alphabet = []byte("123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz")
 
 // Encode a byte array to base 58
 
@@ -13,8 +13,9 @@ func Base58Encode(input []byte) []byte {
 	var result []byte
 
 	x := big.NewInt(0).SetBytes(input)
+
 	base := big.NewInt(int64(len(b58Alphabet)))
-	zero := &big.Int{}
+	zero := big.NewInt(0)
 	mod := &big.Int{}
 
 	for x.Cmp(zero) != 0 {
