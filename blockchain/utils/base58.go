@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"math/big"
-	"github.com/docongminh/blockchain-with-go/utils"
 )
 
 var b58Alphabet = []byte("123456789ABCDEFGHJKLMNPQRSTUVMXYZabcdefghjklmnpqrstuvwxyz")
