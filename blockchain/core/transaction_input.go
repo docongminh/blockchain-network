@@ -1,6 +1,8 @@
-package transaction
+package core
 
-import "bytes"
+import (
+	"bytes"
+)
 
 // Build struct representation a transaction input
 type TXInput struct {

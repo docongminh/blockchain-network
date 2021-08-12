@@ -18,7 +18,7 @@ type UTXOSet struct {
 func (u UTXOSet) FindSpendableOutputs(pubkeyHash []byte, amount int) (int, map[string][]int) {
 	unspentOutputs := make(map[string][]int)
 	accumulated := 0
-	db := u.Blockchain.db
+	db := u.Blockchain.DB
 
 	err := db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(utxoBucket))
@@ -26,7 +26,7 @@ func (u UTXOSet) FindSpendableOutputs(pubkeyHash []byte, amount int) (int, map[s
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			txID := hex.EncodeToString(k)
-			outs := DeserializeOutputs(v)
+			outs := DeserializerOutputs(v)
 
 			for outIdx, out := range outs.Outputs {
 				if out.IsLockedWithKey(pubkeyHash) && accumulated < amount {
@@ -48,14 +48,14 @@ func (u UTXOSet) FindSpendableOutputs(pubkeyHash []byte, amount int) (int, map[s
 // FindUTXO finds UTXO for a public key hash
 func (u UTXOSet) FindUTXO(pubKeyHash []byte) []TXOutput {
 	var UTXOs []TXOutput
-	db := u.Blockchain.db
+	db := u.Blockchain.DB
 
 	err := db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(utxoBucket))
 		c := b.Cursor()
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			outs := DeserializeOutputs(v)
+			outs := DeserializerOutputs(v)
 
 			for _, out := range outs.Outputs {
 				if out.IsLockedWithKey(pubKeyHash) {
@@ -75,7 +75,7 @@ func (u UTXOSet) FindUTXO(pubKeyHash []byte) []TXOutput {
 
 // CountTransactions returns the number of transactions in the UTXO set
 func (u UTXOSet) CountTransactions() int {
-	db := u.Blockchain.db
+	db := u.Blockchain.DB
 	counter := 0
 
 	err := db.View(func(tx *bolt.Tx) error {
@@ -97,7 +97,7 @@ func (u UTXOSet) CountTransactions() int {
 
 // Reindex rebuilds the UTXO set
 func (u UTXOSet) Reindex() {
-	db := u.Blockchain.db
+	db := u.Blockchain.DB
 	bucketName := []byte(utxoBucket)
 
 	err := db.Update(func(tx *bolt.Tx) error {
@@ -128,7 +128,7 @@ func (u UTXOSet) Reindex() {
 				log.Panic(err)
 			}
 
-			err = b.Put(key, outs.Serialize())
+			err = b.Put(key, outs.SerializerOutput())
 			if err != nil {
 				log.Panic(err)
 			}
@@ -141,7 +141,7 @@ func (u UTXOSet) Reindex() {
 // Update updates the UTXO set with transactions from the Block
 // The Block is considered to be the tip of a blockchain
 func (u UTXOSet) Update(block *Block) {
-	db := u.Blockchain.db
+	db := u.Blockchain.DB
 
 	err := db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(utxoBucket))
@@ -151,7 +151,7 @@ func (u UTXOSet) Update(block *Block) {
 				for _, vin := range tx.Vin {
 					updatedOuts := TXOutputs{}
 					outsBytes := b.Get(vin.Txid)
-					outs := DeserializeOutputs(outsBytes)
+					outs := DeserializerOutputs(outsBytes)
 
 					for outIdx, out := range outs.Outputs {
 						if outIdx != vin.Vout {
@@ -165,7 +165,7 @@ func (u UTXOSet) Update(block *Block) {
 							log.Panic(err)
 						}
 					} else {
-						err := b.Put(vin.Txid, updatedOuts.Serialize())
+						err := b.Put(vin.Txid, updatedOuts.SerializerOutput())
 						if err != nil {
 							log.Panic(err)
 						}
@@ -179,7 +179,7 @@ func (u UTXOSet) Update(block *Block) {
 				newOutputs.Outputs = append(newOutputs.Outputs, out)
 			}
 
-			err := b.Put(tx.ID, newOutputs.Serialize())
+			err := b.Put(tx.ID, newOutputs.SerializerOutput())
 			if err != nil {
 				log.Panic(err)
 			}

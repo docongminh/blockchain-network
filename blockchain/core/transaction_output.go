@@ -1,9 +1,11 @@
-package transaction
+package core
 
 import (
 	"bytes"
 	"encoding/gob"
 	"log"
+
+	"github.com/docongminh/dapps/blockchain/utils"
 )
 
 // Build struct representation a transaction output
@@ -14,7 +16,7 @@ type TXOutput struct {
 
 // signs the output
 func (out *TXOutput) Lock(address []byte) {
-	pubKeyHash := Base58Decode(address)
+	pubKeyHash := utils.Base58Decode(address)
 	pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-4]
 	out.PubKeyHash = pubKeyHash
 }
@@ -38,7 +40,7 @@ type TXOutputs struct {
 }
 
 // Serializer TXOutputs
-func (outs TXOutputs) Serializer() []byte {
+func (outs TXOutputs) SerializerOutput() []byte {
 	var buff bytes.Buffer
 
 	enc := gob.NewEncoder(&buff)
@@ -51,7 +53,7 @@ func (outs TXOutputs) Serializer() []byte {
 }
 
 // Deserializer output
-func Deserializer(data []byte) TXOutputs {
+func DeserializerOutputs(data []byte) TXOutputs {
 	var outputs TXOutputs
 	dec := gob.NewDecoder(bytes.NewReader(data))
 	err := dec.Decode(&outputs)

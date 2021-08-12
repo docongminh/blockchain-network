@@ -1,12 +1,16 @@
 package core
 
 import (
+	"bytes"
+	"crypto/ecdsa"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/boltdb/bolt"
+	"github.com/docongminh/dapps/blockchain/utils"
 )
 
 const dbFile = "blockchain.db"
@@ -15,12 +19,12 @@ const genesisCoinbaseData = "Create 7/8/2021, reimplement by minhdo"
 
 type Blockchain struct {
 	tip []byte
-	Db  *bolt.DB
+	DB  *bolt.DB
 }
 
 // Create a new blockchain with genesis Block
-func NewBlockchain(address string) *Blockchain {
-	if DBExist() == false {
+func NewBlockchain() *Blockchain {
+	if utils.DBExist() == false {
 		fmt.Printf("No blockchain existed. Please create one first")
 		os.Exit(1)
 	}
@@ -42,9 +46,30 @@ func NewBlockchain(address string) *Blockchain {
 	return &bc
 }
 
+// FindTransaction finds a transaction by its ID
+func (bc *Blockchain) FindTransaction(ID []byte) (Transaction, error) {
+	bci := bc.Iterator()
+
+	for {
+		block := bci.Next()
+
+		for _, tx := range block.Transactions {
+			if bytes.Compare(tx.ID, ID) == 0 {
+				return *tx, nil
+			}
+		}
+
+		if len(block.PrevBlockHash) == 0 {
+			break
+		}
+	}
+
+	return Transaction{}, errors.New("Transaction is not found")
+}
+
 // Create a new blockchain DB
 func CreateBlockchain(address string) *Blockchain {
-	if DBExist() {
+	if utils.DBExist() {
 		fmt.Printf("Blockchain already exists.")
 		os.Exit(1)
 	}
@@ -64,7 +89,7 @@ func CreateBlockchain(address string) *Blockchain {
 			log.Panic(err)
 		}
 
-		err = b.Put(genesis.Hash, genesis.Serializer())
+		err = b.Put(genesis.Hash, genesis.SerializerBlock())
 		if err != nil {
 			log.Panic(err)
 		}
@@ -87,26 +112,31 @@ func CreateBlockchain(address string) *Blockchain {
 	return &bc
 }
 
-func (bc *Blockchain) MineBlock(transactions []*Transaction) {
+// MineBlock mines a new block with the provided transactions
+func (bc *Blockchain) MineBlock(transactions []*Transaction) *Block {
 	var lastHash []byte
 
-	err := bc.Db.View(func(tx *bolt.Tx) error {
+	for _, tx := range transactions {
+		if bc.VerifyTransaction(tx) != true {
+			log.Panic("ERROR: Invalid transaction")
+		}
+	}
+
+	err := bc.DB.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blocksBucket))
 		lastHash = b.Get([]byte("l"))
 
 		return nil
 	})
-
 	if err != nil {
 		log.Panic(err)
 	}
 
 	newBlock := NewBlock(transactions, lastHash)
 
-	err = bc.Db.Update(func(tx *bolt.Tx) error {
+	err = bc.DB.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blocksBucket))
-		err := b.Put(newBlock.Hash, newBlock.Serializer())
-
+		err := b.Put(newBlock.Hash, newBlock.SerializerBlock())
 		if err != nil {
 			log.Panic(err)
 		}
@@ -115,15 +145,36 @@ func (bc *Blockchain) MineBlock(transactions []*Transaction) {
 		if err != nil {
 			log.Panic(err)
 		}
+
 		bc.tip = newBlock.Hash
 
 		return nil
 	})
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return newBlock
 }
 
-// Find transaction containing UTXO
-func (bc *Blockchain) FindUnspentTransactions(address string) []Transaction {
-	var unspentTXs []Transaction
+// SignTransaction signs inputs of a Transaction
+func (bc *Blockchain) SignTransaction(tx *Transaction, privKey ecdsa.PrivateKey) {
+	prevTXs := make(map[string]Transaction)
+
+	for _, vin := range tx.Vin {
+		prevTX, err := bc.FindTransaction(vin.Txid)
+		if err != nil {
+			log.Panic(err)
+		}
+		prevTXs[hex.EncodeToString(prevTX.ID)] = prevTX
+	}
+
+	tx.Sign(privKey, prevTXs)
+}
+
+// FindUTXO finds all unspent transaction outputs and returns transactions with spent outputs removed
+func (bc *Blockchain) FindUTXO() map[string]TXOutputs {
+	UTXO := make(map[string]TXOutputs)
 	spentTXOs := make(map[string][]int)
 	bci := bc.Iterator()
 
@@ -132,72 +183,54 @@ func (bc *Blockchain) FindUnspentTransactions(address string) []Transaction {
 
 		for _, tx := range block.Transactions {
 			txID := hex.EncodeToString(tx.ID)
+
 		Outputs:
 			for outIdx, out := range tx.Vout {
-				// was the output spent ?
+				// Was the output spent?
 				if spentTXOs[txID] != nil {
-					for _, spentOut := range spentTXOs[txID] {
-						if spentOut == outIdx {
+					for _, spentOutIdx := range spentTXOs[txID] {
+						if spentOutIdx == outIdx {
 							continue Outputs
 						}
 					}
 				}
-				if out.CanBeUnlockWith(address) {
-					unspentTXs = append(unspentTXs, *tx)
-				}
+
+				outs := UTXO[txID]
+				outs.Outputs = append(outs.Outputs, out)
+				UTXO[txID] = outs
 			}
+
 			if tx.IsCoinbase() == false {
 				for _, in := range tx.Vin {
-					if in.CanUnlockOutputWith(address) {
-						inTxID := hex.EncodeToString(in.Txid)
-						spentTXOs[inTxID] = append(spentTXOs[inTxID], in.Vout)
-					}
+					inTxID := hex.EncodeToString(in.Txid)
+					spentTXOs[inTxID] = append(spentTXOs[inTxID], in.Vout)
 				}
 			}
 		}
+
 		if len(block.PrevBlockHash) == 0 {
 			break
 		}
 	}
-	return unspentTXs
+
+	return UTXO
 }
 
-// finds and return UTXO to reference in inputs
-func (bc *Blockchain) FindSpendableOutput(address string, amount int) (int, map[string][]int) {
-	unspentOutputs := make(map[string][]int)
-	unspentTXs := bc.FindUnspentTransactions(address)
-	accumulated := 0
-
-Work:
-	for _, tx := range unspentTXs {
-		txID := hex.EncodeToString(tx.ID)
-
-		for outIdx, out := range tx.Vout {
-			if out.CanBeUnlockWith(address) && accumulated < amount {
-				accumulated += out.Value
-				unspentOutputs[txID] = append(unspentOutputs[txID], outIdx)
-
-				if accumulated >= amount {
-					break Work
-				}
-			}
-		}
-	}
-	return accumulated, unspentOutputs
-}
-
-// Find and returns all unspent transaction output
-func (bc *Blockchain) FindUTXO(address string) []TXOutput {
-	var UTXOs []TXOutput
-	unspentTransactions := bc.FindUnspentTransactions(address)
-
-	for _, tx := range unspentTransactions {
-		for _, out := range tx.Vout {
-			if out.CanBeUnlockWith(address) {
-				UTXOs = append(UTXOs, out)
-			}
-		}
+// VerifyTransaction verifies transaction input signatures
+func (bc *Blockchain) VerifyTransaction(tx *Transaction) bool {
+	if tx.IsCoinbase() {
+		return true
 	}
 
-	return UTXOs
+	prevTXs := make(map[string]Transaction)
+
+	for _, vin := range tx.Vin {
+		prevTX, err := bc.FindTransaction(vin.Txid)
+		if err != nil {
+			log.Panic(err)
+		}
+		prevTXs[hex.EncodeToString(prevTX.ID)] = prevTX
+	}
+
+	return tx.Verify(prevTXs)
 }

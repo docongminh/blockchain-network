@@ -1,8 +1,8 @@
 package main
 
-import "github.com/docongminh/blockchain-with-go/utils"
+import "github.com/docongminh/dapps/blockchain/cli"
 
 func main() {
-	// cli := blockchain.CLI{}
-	// cli.Run()
+	cli := cli.CLI{}
+	cli.Run()
 }

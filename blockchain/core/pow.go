@@ -1,4 +1,4 @@
-package pow
+package core
 
 import (
 	"bytes"
@@ -6,6 +6,12 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+
+	"github.com/docongminh/dapps/blockchain/utils"
+)
+
+var (
+	maxNonce = math.MaxInt16
 )
 
 const targetBits = 20
@@ -29,9 +35,9 @@ func (pow *Pow) prepareData(nonce int) []byte {
 		[][]byte{
 			pow.block.PrevBlockHash,
 			pow.block.HashTransaction(),
-			IntToHex(pow.block.Timestamp),
-			IntToHex(int64(targetBits)),
-			IntToHex(int64(nonce)),
+			utils.IntToHex(pow.block.Timestamp),
+			utils.IntToHex(int64(targetBits)),
+			utils.IntToHex(int64(nonce)),
 		},
 		[]byte{},
 	)
@@ -41,7 +47,6 @@ func (pow *Pow) prepareData(nonce int) []byte {
 func (pow *Pow) Compute() (int, []byte) {
 	var hashInt big.Int
 	var hash [32]byte
-	var maxNonce = math.MaxInt64
 	nonce := 0
 	for nonce < maxNonce {
 		data := pow.prepareData(nonce)

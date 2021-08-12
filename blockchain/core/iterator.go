@@ -13,7 +13,7 @@ type BlockchainIterator struct {
 
 // Iterator
 func (bc *Blockchain) Iterator() *BlockchainIterator {
-	bci := &BlockchainIterator{bc.tip, bc.Db}
+	bci := &BlockchainIterator{bc.tip, bc.DB}
 
 	return bci
 }
@@ -25,7 +25,7 @@ func (i *BlockchainIterator) Next() *Block {
 	err := i.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blocksBucket))
 		encodedBlock := b.Get(i.currentHash)
-		block = Deserializer(encodedBlock)
+		block = DeserializerBlock(encodedBlock)
 
 		return nil
 	})
