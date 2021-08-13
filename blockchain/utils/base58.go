@@ -7,8 +7,14 @@ import (
 
 var b58Alphabet = []byte("123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz")
 
-// Encode a byte array to base 58
+// reverse a byte array
+func ReverseBytes(data []byte) {
+	for i, j := 0, len(data)-1; i < j; i, j = i+1, j-1 {
+		data[i], data[j] = data[j], data[i]
+	}
+}
 
+// Encode a byte array to base 58
 func Base58Encode(input []byte) []byte {
 	var result []byte
 
