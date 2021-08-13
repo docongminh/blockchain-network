@@ -2,8 +2,6 @@ package core
 
 import (
 	"bytes"
-	"encoding/gob"
-	"log"
 
 	"github.com/docongminh/dapps/blockchain/utils"
 )
@@ -32,34 +30,4 @@ func NewTXOutput(value int, address string) *TXOutput {
 	txo.Lock([]byte(address))
 
 	return txo
-}
-
-// outputs collection
-type TXOutputs struct {
-	Outputs []TXOutput
-}
-
-// Serializer TXOutputs
-func (outs TXOutputs) SerializerOutput() []byte {
-	var buff bytes.Buffer
-
-	enc := gob.NewEncoder(&buff)
-	err := enc.Encode(outs)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	return buff.Bytes()
-}
-
-// Deserializer output
-func DeserializerOutputs(data []byte) TXOutputs {
-	var outputs TXOutputs
-	dec := gob.NewDecoder(bytes.NewReader(data))
-	err := dec.Decode(&outputs)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	return outputs
 }
