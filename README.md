@@ -1,5 +1,5 @@
 # Blockchain with Go
-# TODO
+# Main TODO
 * Blockchain core
   - [ ] Refactor coding convention and remove somes trash
   - [ ] Summary references
