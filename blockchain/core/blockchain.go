@@ -13,7 +13,7 @@ import (
 	"github.com/docongminh/dapps/blockchain/utils"
 )
 
-const dbFile = "blockchain.db"
+const dbFile = "blockchain_%s.db"
 const blocksBucket = "blocks"
 const genesisCoinbaseData = "Create 7/8/2021, reimplement by minhdo"
 
