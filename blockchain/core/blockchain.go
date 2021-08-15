@@ -71,52 +71,6 @@ func (bc *Blockchain) FindTransaction(ID []byte) (Transaction, error) {
 	return Transaction{}, errors.New("Transaction is not found")
 }
 
-// FindUnspentTransactions returns a list of transactions containing unspent outputs
-func (bc *Blockchain) FindUnspentTransactions(pubKeyHash []byte) []Transaction {
-	var unspentTXs []Transaction
-	spentTXOs := make(map[string][]int)
-	bci := bc.Iterator()
-
-	for {
-		block := bci.Next()
-
-		for _, tx := range block.Transactions {
-			txID := hex.EncodeToString(tx.ID)
-
-		Outputs:
-			for outIdx, out := range tx.Vout {
-				// Was the output spent?
-				if spentTXOs[txID] != nil {
-					for _, spentOutIdx := range spentTXOs[txID] {
-						if spentOutIdx == outIdx {
-							continue Outputs
-						}
-					}
-				}
-
-				if out.IsLockedWithKey(pubKeyHash) {
-					unspentTXs = append(unspentTXs, *tx)
-				}
-			}
-
-			if tx.IsCoinbase() == false {
-				for _, in := range tx.Vin {
-					if in.UsesKey(pubKeyHash) {
-						inTxID := hex.EncodeToString(in.Txid)
-						spentTXOs[inTxID] = append(spentTXOs[inTxID], in.Vout)
-					}
-				}
-			}
-		}
-
-		if len(block.PrevBlockHash) == 0 {
-			break
-		}
-	}
-
-	return unspentTXs
-}
-
 // Create a new blockchain DB
 func CreateBlockchain(address string) *Blockchain {
 	if utils.DBExist() {
@@ -220,6 +174,52 @@ func (bc *Blockchain) SignTransaction(tx *Transaction, privKey ecdsa.PrivateKey)
 	}
 
 	tx.Sign(privKey, prevTXs)
+}
+
+// FindUnspentTransactions returns a list of transactions containing unspent outputs
+func (bc *Blockchain) FindUnspentTransactions(pubKeyHash []byte) []Transaction {
+	var unspentTXs []Transaction
+	spentTXOs := make(map[string][]int)
+	bci := bc.Iterator()
+
+	for {
+		block := bci.Next()
+
+		for _, tx := range block.Transactions {
+			txID := hex.EncodeToString(tx.ID)
+
+		Outputs:
+			for outIdx, out := range tx.Vout {
+				// Was the output spent?
+				if spentTXOs[txID] != nil {
+					for _, spentOutIdx := range spentTXOs[txID] {
+						if spentOutIdx == outIdx {
+							continue Outputs
+						}
+					}
+				}
+
+				if out.IsLockedWithKey(pubKeyHash) {
+					unspentTXs = append(unspentTXs, *tx)
+				}
+			}
+
+			if tx.IsCoinbase() == false {
+				for _, in := range tx.Vin {
+					if in.UsesKey(pubKeyHash) {
+						inTxID := hex.EncodeToString(in.Txid)
+						spentTXOs[inTxID] = append(spentTXOs[inTxID], in.Vout)
+					}
+				}
+			}
+		}
+
+		if len(block.PrevBlockHash) == 0 {
+			break
+		}
+	}
+
+	return unspentTXs
 }
 
 //
