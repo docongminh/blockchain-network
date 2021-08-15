@@ -1,2 +1,7 @@
 # Blockchain with Go
-  This project developed when i have been learning golang. So, Coding convention too bad
+# TODO
+  - [ ] Refactor coding convention and remove somes trash
+  - [ ] Summary references
+  - [ ] Test case blockchain core
+  
+ 
