@@ -6,10 +6,25 @@ import (
 	"github.com/docongminh/dapps/blockchain/utils"
 )
 
+// Build struct representation a transaction input
+type TXInput struct {
+	Txid      []byte
+	Vout      int
+	Signature []byte
+	PubKey    []byte
+}
+
 // Build struct representation a transaction output
 type TXOutput struct {
 	Value      int
 	PubKeyHash []byte
+}
+
+// check  whether the address initiated the transaction
+func (in *TXInput) UsesKey(pubKeyHash []byte) bool {
+	lockingHash := HashPubKey(in.PubKey)
+
+	return bytes.Compare(lockingHash, pubKeyHash) == 0
 }
 
 // signs the output
