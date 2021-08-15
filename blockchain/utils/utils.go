@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-const dbFile = "blockchain.db"
+// const dbFile = "blockchain.db"
 
 // IntToHex converts an int64 to a byte array
 func IntToHex(num int64) []byte {
@@ -20,7 +20,7 @@ func IntToHex(num int64) []byte {
 	return buff.Bytes()
 }
 
-func DBExist() bool {
+func DBExist(dbFile string) bool {
 	if _, err := os.Stat(dbFile); os.IsNotExist(err) {
 		return false
 	}

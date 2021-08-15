@@ -7,8 +7,8 @@ import (
 	"github.com/docongminh/dapps/blockchain/core"
 )
 
-func (cli *CLI) printChain() {
-	bc := core.NewBlockchain("")
+func (cli *CLI) printChain(nodeID string) {
+	bc := core.NewBlockchain(nodeID)
 	defer bc.DB.Close()
 
 	bci := bc.Iterator()
