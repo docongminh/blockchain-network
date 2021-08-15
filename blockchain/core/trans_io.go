@@ -6,7 +6,7 @@ import (
 	"github.com/docongminh/dapps/blockchain/utils"
 )
 
-// Build struct representation a transaction input
+// representation a transaction input, it's reference to previous output
 type TXInput struct {
 	Txid      []byte
 	Vout      int
@@ -15,6 +15,8 @@ type TXInput struct {
 }
 
 // Build struct representation a transaction output
+// Outputs are indivisible -> when reference to new trans will spent whole value
+// If greater amount, will generate and send back to sender (same real world)
 type TXOutput struct {
 	Value      int
 	PubKeyHash []byte
