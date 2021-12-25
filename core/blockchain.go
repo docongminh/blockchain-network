@@ -10,7 +10,7 @@ import (
 	"os"
 
 	"github.com/boltdb/bolt"
-	"github.com/docongminh/dapps/blockchain/utils"
+	"github.com/docongminh/utils"
 )
 
 const dbFile = "blockchain_%s.db"

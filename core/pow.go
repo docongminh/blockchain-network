@@ -7,7 +7,7 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/docongminh/dapps/blockchain/utils"
+	"github.com/docongminh/utils"
 )
 
 var (

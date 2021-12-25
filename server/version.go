@@ -5,7 +5,7 @@ import (
 	"encoding/gob"
 	"log"
 
-	"github.com/docongminh/dapps/blockchain/core"
+	"github.com/docongminh/core"
 )
 
 type Verzion struct {

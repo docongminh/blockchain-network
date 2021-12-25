@@ -5,7 +5,7 @@ import (
 	"encoding/gob"
 	"log"
 
-	"github.com/docongminh/dapps/blockchain/utils"
+	"github.com/docongminh/utils"
 )
 
 // representation a transaction input, it's reference to previous output

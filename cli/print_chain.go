@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/docongminh/dapps/blockchain/core"
+	"github.com/docongminh/core"
 )
 
 func (cli *CLI) printChain(nodeID string) {

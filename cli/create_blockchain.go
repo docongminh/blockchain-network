@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/docongminh/dapps/blockchain/core"
+	"github.com/docongminh/core"
 )
 
 func (cli *CLI) createBlockchain(address, nodeID string) {

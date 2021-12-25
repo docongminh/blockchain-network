@@ -1,4 +1,4 @@
-module github.com/docongminh/dapps/blockchain
+module github.com/docongminh
 
 go 1.16
 

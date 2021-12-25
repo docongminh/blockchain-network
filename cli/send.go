@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/docongminh/dapps/blockchain/core"
-	"github.com/docongminh/dapps/blockchain/server"
+	"github.com/docongminh/core"
+	"github.com/docongminh/server"
 )
 
 func (cli *CLI) send(from, to string, amount int, nodeID string, mineNow bool) {

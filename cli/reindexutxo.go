@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/docongminh/dapps/blockchain/core"
+	"github.com/docongminh/core"
 )
 
 func (cli *CLI) reindexUTXO(nodeID string) {

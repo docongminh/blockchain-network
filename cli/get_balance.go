@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/docongminh/dapps/blockchain/core"
-	"github.com/docongminh/dapps/blockchain/utils"
+	"github.com/docongminh/core"
+	"github.com/docongminh/utils"
 )
 
 func (cli *CLI) getBalance(address, nodeID string) {

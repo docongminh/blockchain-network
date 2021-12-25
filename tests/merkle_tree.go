@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/docongminh/dapps/blockchain/core"
+	"github.com/docongminh/core"
 	"github.com/stretchr/testify/assert"
 )
 
